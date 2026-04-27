@@ -77,7 +77,45 @@ compute = st.sidebar.button("Compute")
 
 if compute and models is not None:
 
-    # ---------- TABLES ----------
+    # ================= EXACT OUTPUT =================
+    st.subheader("Exact Output at Current Input")
+
+    df_current = pd.DataFrame([{
+        "T_Peak": t_peak,
+        "x_hs": x_model,
+        "y_hs": y_hs,
+        "z_hs": z_hs,
+        "SOC": soc
+    }])
+
+    pred_current = {name: model.predict(df_current)[0] for name, model in models.items()}
+
+    # 🔥 Apply mirroring
+    if mirrored:
+        v1, v3 = pred_current["Cell3 (V)"], pred_current["Cell1 (V)"]
+        t1, t3 = pred_current["T_cell3"], pred_current["T_cell1"]
+    else:
+        v1, v3 = pred_current["Cell1 (V)"], pred_current["Cell3 (V)"]
+        t1, t3 = pred_current["T_cell1"], pred_current["T_cell3"]
+
+    v2 = pred_current["Cell2 (V)"]
+    t2 = pred_current["T_cell2"]
+
+    colA, colB = st.columns(2)
+
+    with colA:
+        st.subheader("Voltage (V)")
+        st.metric("Cell1", f"{v1:.4f}")
+        st.metric("Cell2", f"{v2:.4f}")
+        st.metric("Cell3", f"{v3:.4f}")
+
+    with colB:
+        st.subheader("Temperature (°C)")
+        st.metric("Cell1", f"{t1:.2f}")
+        st.metric("Cell2", f"{t2:.2f}")
+        st.metric("Cell3", f"{t3:.2f}")
+
+    # ================= TABLES =================
     soc_points = np.linspace(1.0, 0.2, 5)
 
     volt_rows = []
@@ -95,7 +133,6 @@ if compute and models is not None:
 
         pred = {name: model.predict(df)[0] for name, model in models.items()}
 
-        # 🔥 APPLY MIRROR SWAP
         if mirrored:
             c1_v, c3_v = pred["Cell3 (V)"], pred["Cell1 (V)"]
             c1_t, c3_t = pred["T_cell3"], pred["T_cell1"]
@@ -120,7 +157,7 @@ if compute and models is not None:
     volt_table = pd.DataFrame(volt_rows)
     temp_table = pd.DataFrame(temp_rows)
 
-    # ---------- CURVES ----------
+    # ================= CURVES =================
     soc_vals = np.linspace(1.0, 0.2, 25)
 
     temp = {"SOC": []}
