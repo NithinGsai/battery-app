@@ -72,11 +72,21 @@ fig.add_trace(go.Scatter3d(
 fig.update_layout(height=500)
 st.plotly_chart(fig, config={"scrollZoom": False})
 
-# ================= COMPUTE ALWAYS =================
-if models is not None:
+# ================= COMPUTE BUTTON =================
+compute = st.sidebar.button("Compute")
+
+# session state to persist results
+if "computed" not in st.session_state:
+    st.session_state.computed = False
+
+if compute:
+    st.session_state.computed = True
+
+# ================= COMPUTE LOGIC =================
+if st.session_state.computed and models is not None:
 
     # ================= EXACT OUTPUT =================
-    st.subheader("Exact Output at Current Input")
+    st.subheader("Output")
 
     df_current = pd.DataFrame([{
         "T_Peak": t_peak,
@@ -98,19 +108,16 @@ if models is not None:
     v2 = pred_current["Cell2 (V)"]
     t2 = pred_current["T_cell2"]
 
-    colA, colB = st.columns(2)
+    output_df = pd.DataFrame([{
+        "Cell1 (V)": round(v1, 4),
+        "Cell2 (V)": round(v2, 4),
+        "Cell3 (V)": round(v3, 4),
+        "T_cell1 (°C)": round(t1, 2),
+        "T_cell2 (°C)": round(t2, 2),
+        "T_cell3 (°C)": round(t3, 2)
+    }])
 
-    with colA:
-        st.subheader("Voltage (V)")
-        st.metric("Cell1", f"{v1:.4f}")
-        st.metric("Cell2", f"{v2:.4f}")
-        st.metric("Cell3", f"{v3:.4f}")
-
-    with colB:
-        st.subheader("Temperature (°C)")
-        st.metric("Cell1", f"{t1:.2f}")
-        st.metric("Cell2", f"{t2:.2f}")
-        st.metric("Cell3", f"{t3:.2f}")
+    st.dataframe(output_df, use_container_width=True)
 
     # ================= TABLES =================
     soc_points = np.linspace(1.0, 0.2, 5)
@@ -207,12 +214,7 @@ if models is not None:
         fig1 = go.Figure()
         for col in temp_df.columns:
             if col != "SOC":
-                fig1.add_trace(go.Scatter(
-                    x=temp_df["SOC"],
-                    y=temp_df[col],
-                    mode="lines",
-                    name=col
-                ))
+                fig1.add_trace(go.Scatter(x=temp_df["SOC"], y=temp_df[col], mode="lines", name=col))
         fig1.update_layout(xaxis=dict(autorange="reversed"))
         st.plotly_chart(fig1)
 
@@ -227,11 +229,6 @@ if models is not None:
         fig2 = go.Figure()
         for col in volt_df.columns:
             if col != "SOC":
-                fig2.add_trace(go.Scatter(
-                    x=volt_df["SOC"],
-                    y=volt_df[col],
-                    mode="lines",
-                    name=col
-                ))
+                fig2.add_trace(go.Scatter(x=volt_df["SOC"], y=volt_df[col], mode="lines", name=col))
         fig2.update_layout(xaxis=dict(autorange="reversed"))
         st.plotly_chart(fig2)
