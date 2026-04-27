@@ -40,7 +40,7 @@ x_hs = x_hs_mm / 1000
 y_hs = y_hs_mm / 1000
 z_hs = z_hs_mm / 1000
 
-# 🔥 MIRROR LOGIC
+# ================= MIRROR =================
 mirrored = x_hs < 0.02
 x_model = 0.04 - x_hs if mirrored else x_hs
 
@@ -72,10 +72,8 @@ fig.add_trace(go.Scatter3d(
 fig.update_layout(height=500)
 st.plotly_chart(fig, config={"scrollZoom": False})
 
-# ================= COMPUTE =================
-compute = st.sidebar.button("Compute")
-
-if compute and models is not None:
+# ================= COMPUTE ALWAYS =================
+if models is not None:
 
     # ================= EXACT OUTPUT =================
     st.subheader("Exact Output at Current Input")
@@ -90,7 +88,6 @@ if compute and models is not None:
 
     pred_current = {name: model.predict(df_current)[0] for name, model in models.items()}
 
-    # 🔥 Apply mirroring
     if mirrored:
         v1, v3 = pred_current["Cell3 (V)"], pred_current["Cell1 (V)"]
         t1, t3 = pred_current["T_cell3"], pred_current["T_cell1"]
@@ -210,7 +207,12 @@ if compute and models is not None:
         fig1 = go.Figure()
         for col in temp_df.columns:
             if col != "SOC":
-                fig1.add_trace(go.Scatter(x=temp_df["SOC"], y=temp_df[col], mode="lines", name=col))
+                fig1.add_trace(go.Scatter(
+                    x=temp_df["SOC"],
+                    y=temp_df[col],
+                    mode="lines",
+                    name=col
+                ))
         fig1.update_layout(xaxis=dict(autorange="reversed"))
         st.plotly_chart(fig1)
 
@@ -225,6 +227,11 @@ if compute and models is not None:
         fig2 = go.Figure()
         for col in volt_df.columns:
             if col != "SOC":
-                fig2.add_trace(go.Scatter(x=volt_df["SOC"], y=volt_df[col], mode="lines", name=col))
+                fig2.add_trace(go.Scatter(
+                    x=volt_df["SOC"],
+                    y=volt_df[col],
+                    mode="lines",
+                    name=col
+                ))
         fig2.update_layout(xaxis=dict(autorange="reversed"))
         st.plotly_chart(fig2)
